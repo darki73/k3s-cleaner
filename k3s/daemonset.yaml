@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: image-cleanup
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: image-cleanup
+  template:
+    metadata:
+      labels:
+        name: image-cleanup
+    spec:
+      containers:
+      - name: cleanup
+        image: darki73/k3s-cleaner:latest
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        env:
+        - name: CLEANUP_HOUR
+          value: "2"
+        - name: CLEANUP_MINUTE
+          value: "0"
+        volumeMounts:
+        - name: containerd-socket
+          mountPath: /run/k3s/containerd/containerd.sock
+        - name: crictl-binary
+          mountPath: /var/lib/rancher/k3s/data/current/bin/crictl
+          subPath: bin/crictl
+      volumes:
+      - name: containerd-socket
+        hostPath:
+          path: /run/k3s/containerd/containerd.sock
+          type: Socket
+      - name: crictl-binary
+        hostPath:
+          path: /var/lib/rancher/k3s/data/current
